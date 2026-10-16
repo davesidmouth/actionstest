@@ -11,7 +11,7 @@ env:
   AZURE_WEBAPP_NAME: weather-service
   DOTNET_VERSION: "8.x"
   SOLUTION_PATH: "./testing/testing.sln"
-  API_PROJECT_PATH: "./testing/testing.Api/testing.Api.csproj"
+  API_PROJECT_PATH: "./testing/WebApplication1/WebApplication1.csproj"
   PUBLISH_DIR: "./publish"
 
 jobs:
