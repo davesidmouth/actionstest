@@ -8,7 +8,7 @@ on:
       - main
 
 env:
-  AZURE_WEBAPP_NAME: weather-service
+  AZURE_WEBAPP_NAME: weatherdave
   DOTNET_VERSION: "8.x"
   SOLUTION_PATH: "./testing/testing.sln"
   API_PROJECT_PATH: "./testing/WebApplication1/WebApplication1.csproj"
