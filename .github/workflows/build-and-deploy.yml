@@ -11,24 +11,22 @@ permissions:
   contents: read
   id-token: write
 
-
- env:
+env:
   IMAGE_NAME: weather-api
-  CONTAIINER_APP_NAME: ca_name
-  RESOURCE_GROUP: rg_name
-  DOTNET_VERSION: "8.x"
-  SOLUTION_PATH: "./testing/testing.sln"
-  PROJECT_PATH: testing\WebApplication1\WebApplication1.csproj
+  DOTNET_VERSION: "8.0.x"
+  SOLUTION_PATH: testing/testing.sln
+  PROJECT_PATH: testing/WebApplication1/WebApplication1.csproj
+  DOCKERFILE_PATH: testing/WebApplication1/Dockerfile
   NAMESPACE: weather
 
 jobs:
   build-and-deploy:
-    name: Build and publish
+    name: Build and deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Login to Azure using OIDC
         uses: azure/login@v2
@@ -37,31 +35,30 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        run: dotnet restore "$SOLUTION_PATH"
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+        run: dotnet build "$SOLUTION_PATH" --configuration Release --no-restore
 
       - name: Login to ACR
         run: az acr login --name "${{ vars.AZURE_ACR_NAME }}"
-        
+
       - name: Build and push image
         env:
           ACR_NAME: ${{ vars.AZURE_ACR_NAME }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
-            --build-arg PROJECT_PATH="$PROJECT_PATH" \
-            -t "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG" .
-          docker push \
-            "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG"
+            -f "$DOCKERFILE_PATH" \
+            -t "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG" \
+            .
+          docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG"
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -91,31 +88,3 @@ jobs:
           kubectl rollout status deployment/weather-api \
             --namespace "$NAMESPACE"
           kubectl get pods,services -n "$NAMESPACE"
-#       - name: Set up docker buildX
-#         uses: dotcker/setup-buildx-action@v3
-
-#       - name: Log in to acr
-#         uses: docker/login-action@v3
-#         with:
-#           registry: ${{ env.AZURE_CONTAIINER_REGISTRY }}.azurecr.io 
-#           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
-#           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-
-#       - name: build and push image to acr
-#         uses: docker/build-push-action@v6
-#         with:
-#           push: true
-#           tags: ${{ env.AZURE_CONTAIINER_REGISTRY }}.azurecr.io/${{ env.CONTAIINER_APP_NAME }}:${{ github.sha }} 
-#           file: testing/WebApplication1/Dockerfile
-
-#       - name: Azuer login
-#         uses: azure/login@v2
-#         with:
-#           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-#       - name: deploy to contaner apps
-#         uses: azure/container-apps-deploy-action@v1
-#         with:
-#           imageToDeploy: ${{ env.AZURE_CONTAIINER_REGISTRY }}.azurecr.io/${{ env.CONTAIINER_APP_NAME }}:${{ github.sha }} 
-#           resourceGroup: ${{ env.RESOURCE_GROUP }}
-#           contanerAppName: ${{ env.CONTAIINER_APP_NAME }}
