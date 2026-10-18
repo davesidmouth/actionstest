@@ -49,6 +49,18 @@ jobs:
       - name: Login to ACR
         run: az acr login --name "${{ secrets.AZURE_ACR_NAME }}"
 
+      - name: Check secret exists
+        run: |
+          if [ -n "$AZURE_CREDENTIALS" ]; then
+            echo "$AZURE_CREDENTIALS"
+            echo "$AZURE_Name"
+          else
+            echo "AZURE_CREDENTIALS is empty"
+          fi
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AZURE_Name: ${{ secrets.AZURE_AKS_NAME }}
+
       - name: Build and push image
         env:
           ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
