@@ -57,8 +57,9 @@ jobs:
           docker build \
             -f "$DOCKERFILE_PATH" \
             -t "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG" \
-            .
+            testing
           docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG"
+
 
       - name: Install Helm
         uses: azure/setup-helm@v4
